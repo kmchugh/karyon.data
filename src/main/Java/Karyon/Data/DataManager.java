@@ -32,7 +32,8 @@ public abstract class DataManager
         {
             if (g_lHasDataManager == null)
             {
-                g_oDataManager = Application.getInstance().createDataManager();
+                // TODO: Create the data manager
+                //g_oDataManager = Application.getInstance().createDataManager();
                 g_lHasDataManager = g_oDataManager != null;
                 if (g_oDataManager != null)
                 {
