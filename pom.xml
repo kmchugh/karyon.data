@@ -44,6 +44,15 @@
     <!-- ICatalyst repository -->
     <repositories>
         <repository>
+            <id>Karyon-mvn-repo</id>
+            <url>https://raw.github.com/kmchugh/Karyon/mvn-repo</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+
+        <repository>
             <id>Karyon.Data-mvn-repo</id>
             <url>https://raw.github.com/kmchugh/Karyon.Data/mvn-repo</url>
             <snapshots>
