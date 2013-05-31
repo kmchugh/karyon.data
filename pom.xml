@@ -4,7 +4,7 @@
 
     <groupId>uk.co.icatalyst</groupId>
     <artifactId>karyon.data</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <name>Karyon.Data</name>
     <description>Karyon Data Libraries</description>
     <packaging>jar</packaging>
@@ -17,7 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Plugin related properties -->
-        <uk.co.icatalyst.karyon.version>1.2-SNAPSHOT</uk.co.icatalyst.karyon.version>
+        <uk.co.icatalyst.karyon.version>0.2-SNAPSHOT</uk.co.icatalyst.karyon.version>
         <junit.version>4.11</junit.version>
         <org.apache.maven.plugins.maven.compiler.plugin.version>3.0</org.apache.maven.plugins.maven.compiler.plugin.version>
         <org.apache.maven.plugins.maven.deploy.plugin.version>2.7</org.apache.maven.plugins.maven.deploy.plugin.version>
