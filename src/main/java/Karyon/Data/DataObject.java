@@ -1,7 +1,7 @@
 package Karyon.Data;
 
 import Karyon.*;
-import Karyon.DyanmicCode.Java;
+import Karyon.DynamicCode.Java;
 import Karyon.Exceptions.PropertyNotSetException;
 import sun.reflect.generics.tree.FieldTypeSignature;
 
@@ -27,4 +27,6 @@ public abstract class DataObject
     protected DataObject()
     {
     }
+
+    // TODO: Specify the type of data cursor that should be used with this object
 }

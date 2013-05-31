@@ -1,243 +1,196 @@
 package Karyon.Data;
 
-import Karyon.*;
-import Karyon.Applications.Application;
+import Karyon.Collections.HashMap;
 import Karyon.Collections.List;
-import Karyon.DyanmicCode.Java;
-import Karyon.Exceptions.DataMigrationFailedException;
-
-import java.lang.Object;
-import java.util.Map;
+import Karyon.Utilities;
 
 /**
- * The data manager controls data access between that application and data store.
+ * The DataManager controls all access to data and data operations
  */
-public abstract class DataManager
+public class DataManager
     extends Karyon.Object
-    implements IDataManager
 {
-    // TODO: Make this IDataManager
-    private static IDataManager g_oDataManager;
-    private static Boolean g_lHasDataManager;
-    private static String DATAMANAGER_VERSION_KEY = "Application.DataStore.Version";
+    private static DataManager g_oDataManager;
 
     /**
-     * Gets the data manager for this Application.  The call to getInstance will
-     * create and initialise the data manager if it did not exist
-     * @return the data manager for the application or null if there is no data manager
+     * Gets the data manager for this Application
+     * @return the data manager for the application
      */
-    public static IDataManager getInstance()
+    public static DataManager getInstance()
     {
         if (g_oDataManager == null)
         {
-            if (g_lHasDataManager == null)
-            {
-                // TODO: Create the data manager
-                //g_oDataManager = Application.getInstance().createDataManager();
-                g_lHasDataManager = g_oDataManager != null;
-                if (g_oDataManager != null)
-                {
-                    g_oDataManager.initialise();
-                }
-            }
+            g_oDataManager = new DataManager();
         }
         return g_oDataManager;
     }
 
+    private HashMap<String, IDataConnector> m_oConnectors;
+    private IDataConnector m_oDefault;
+    private HashMap<IDataConnector, List<Class<? extends DataObject>>> m_oEntityMap;
+
     /**
-     * Checks if this application has a data manager.  If the application
-     * is not instantiated at this point it will be for this call.
-     * @return true if there is one, false otherwise.
+     * Not publicly creatable
      */
-    public static boolean hasDataManager()
+    private DataManager()
     {
-        if (g_lHasDataManager == null)
+    }
+
+    /**
+     * Adds the specified connector to the DataManager.
+     * @param tcKey the key for this connector
+     * @param toConnector the connector to add
+     */
+    public final void registerConnector(String tcKey, IDataConnector toConnector)
+    {
+        if (m_oConnectors == null)
         {
-            getInstance();
+            m_oConnectors = new HashMap<String, IDataConnector>();
         }
-        return g_lHasDataManager != null && g_lHasDataManager;
-    }
+        m_oConnectors.put(tcKey.toLowerCase(), toConnector);
 
-    private Float m_nVersion;
-    private boolean m_lInitialised;
-
-    @Override
-    public final IDataManager attach()
-    {
-        IDataManager loReturn = g_oDataManager == this ? null : g_oDataManager;
-        g_oDataManager = this;
-        return loReturn;
-    }
-
-    @Override
-    public final void detach()
-    {
-        g_oDataManager = null;
-        g_lHasDataManager = null;
-    }
-
-    @Override
-    public final boolean isInitialised()
-    {
-        return m_lInitialised;
-    }
-
-    @Override
-    public final boolean initialise()
-    {
-        if (!isInitialised() && hasDataManager())
+        // If there is no default connector, make this the default
+        if (m_oDefault == null)
         {
-            m_lInitialised = true;
-            IDataManager loDataManager = getInstance();
-            if(!loDataManager.isDataStoreCreated())
-            {
-                loDataManager.createDataStore();
-            }
-            float lnLastVersion = loDataManager.getVersion();
-            float lnCurrentVersion = loDataManager.getCodedVersion();
+            m_oDefault = toConnector;
+        }
+    }
 
-            try
+    /**
+     * Gets the specified data connector
+     * @param tcKey the key for the data connector
+     * @return the data connector or null if there is no matching connector
+     */
+    protected final IDataConnector getConnector(String tcKey)
+    {
+        return m_oConnectors != null ? m_oConnectors.get(tcKey.toLowerCase()) : null;
+    }
+
+    /**
+     * Removes the connector specified
+     * @param tcKey the key of the connector to remove
+     * @return true if the connector has been removed, false if nothing has been removed
+     */
+    public final boolean unregisterConnector(String tcKey)
+    {
+        IDataConnector loConnector = m_oConnectors != null ? m_oConnectors.remove(tcKey.toLowerCase()) : null;
+        // Also need to remove from entity mapping
+        if (loConnector != null && m_oEntityMap != null)
+        {
+            m_oEntityMap.remove(loConnector);
+        }
+        return loConnector != null;
+    }
+
+    /**
+     * Checks if this data connector is registered, and if it is returns the key
+     * it is registered under
+     * @param toConnector the connector to check
+     * @return the key, or null if not registered
+     */
+    public final String isRegistered(IDataConnector toConnector)
+    {
+        if (m_oConnectors != null)
+        {
+            for (String lcKey : m_oConnectors.keySet())
             {
-                // Do we need to upgrade/downgrade?
-                if (lnCurrentVersion != lnLastVersion)
+                if (m_oConnectors.get(lcKey) == toConnector)
                 {
-                    if (lnLastVersion < lnCurrentVersion)
-                    {
-                        loDataManager.upgrade(lnCurrentVersion);
-                    }
-                    else
-                    {
-                        loDataManager.revert(lnCurrentVersion);
-                    }
+                    return lcKey;
                 }
-                Application.getInstance().getPropertyManager().setProperty(DATAMANAGER_VERSION_KEY, lnCurrentVersion);
             }
-            catch (DataMigrationFailedException ex)
-            {
-                return false;
-            }
+        }
+        return null;
+    }
+
+    /**
+     * Marks the specified connector as the default connector.  The default connector
+     * is the connector that will be used for data objects that are not specifically mapped.
+     * If the specified connector does not exist then there is no change to the current default
+     * @param tcKey the key of the connector to mark
+     * @return true if the default connector changed, false otherwise
+     */
+    public final boolean markDefault(String tcKey)
+    {
+        return m_oConnectors != null && markDefault(m_oConnectors.get(tcKey.toLowerCase()));
+    }
+
+    /**
+     * Marks the specified connector as the default connector.  This connector can only be set
+     * as the default connector if it has previously been added to the manager using addConnector
+     * @param toDefault the default connector
+     * @return true if the default connector changed, false otherwise
+     */
+    public final boolean markDefault(IDataConnector toDefault)
+    {
+        if (toDefault != null && m_oConnectors != null && m_oConnectors.values().contains(toDefault))
+        {
+            m_oDefault = toDefault;
+            return true;
         }
         return false;
     }
 
-
-    @Override
-    public final float getVersion()
-    {
-        if (m_nVersion == null)
-        {
-            m_nVersion = Application.getInstance().getPropertyManager().getProperty(DATAMANAGER_VERSION_KEY, 0f);
-        }
-        return m_nVersion;
-    }
-
-    @Override
-    public abstract float getCodedVersion();
-
     /**
-     * Sets the Current Version of the data store
-     * @param tnVersion the version to set to
+     * Gets the default connector, if no connector has been set as default this will
+     * return null
+     * @return the default connector
      */
-    private void setVersion(float tnVersion)
+    public final IDataConnector getDefault()
     {
-        Application.getInstance().getPropertyManager().setProperty(DATAMANAGER_VERSION_KEY, tnVersion);
-        m_nVersion = tnVersion;
+        return m_oDefault;
     }
 
-    @Override
-    public boolean upgrade(float tnUpgradeTo)
-    {
-        float lnCurrentVersion = getVersion();
-        try
-        {
-            for (Class<DataMigration> loMigrationClass : getMigrations())
-            {
-                DataMigration loMigration = null;
-                try
-                {
-                    loMigration = loMigrationClass.newInstance();
-                }
-                catch (Throwable ex)
-                {
-                    throw new DataMigrationFailedException(loMigrationClass, ex);
-                }
-                if (loMigration != null)
-                {
-                    if (loMigration.getVersion() > lnCurrentVersion &&
-                            loMigration.getVersion() <= tnUpgradeTo)
-                    {
-                        loMigration.upgrade();
-                    }
-                }
-            }
-            setVersion(tnUpgradeTo);
-        }
-        catch (DataMigrationFailedException ex)
-        {
-            Application.log(ex);
-            return false;
-        }
-        return true;
-    }
 
-    @Override
-    public boolean revert(float tnRevertTo)
+    // TODO: Implement registration for sharded objects and multi source classes
+    /**
+     * Directly maps the specified data object to the data connector.  This will forward any data manipulation
+     * actions to the data connector
+     * @param toConnector the connector that will handle data operations for the data object type
+     * @param toDataObjectClass the type of data object being registered
+     * @return true if the map is changed as a result of this call
+     */
+    public final boolean map(IDataConnector toConnector, Class<? extends DataObject> toDataObjectClass)
     {
-        float lnCurrentVersion = getVersion();
-        try
+        // Make sure the connector is registered
+        if (m_oConnectors == null || !m_oConnectors.values().contains(toConnector))
         {
-            for (Class<DataMigration> loMigrationClass : getMigrations())
-            {
-                DataMigration loMigration = null;
-                try
-                {
-                    loMigration = loMigrationClass.newInstance();
-                }
-                catch (Throwable ex)
-                {
-                    throw new DataMigrationFailedException(loMigrationClass, ex);
-                }
-                if (loMigration != null)
-                {
-                    if (loMigration.getVersion() < lnCurrentVersion &&
-                            loMigration.getVersion() >= tnRevertTo)
-                    {
-                        loMigration.upgrade();
-                    }
-                }
-            }
-            setVersion(tnRevertTo);
+            registerConnector(Utilities.generateGUID(), toConnector);
         }
-        catch (DataMigrationFailedException ex)
+
+        if (m_oEntityMap == null)
         {
-            Application.log(ex);
-            return false;
+            m_oEntityMap = new HashMap<IDataConnector, List<Class<? extends DataObject>>>();
         }
-        return true;
-    }
 
-    @Override
-    public final <K extends DataMigration> List<Class<K>> getMigrations()
-    {
-        return new List<Class<K>>(new Class[]{DataSourceVersionMigration.class});
-    }
+        if (!m_oEntityMap.containsKey(toConnector))
+        {
+            m_oEntityMap.put(toConnector, new List<Class<? extends DataObject>>());
+        }
 
-    @Override
-    public <K extends DataObject> boolean hasEntity(Class<K> toClass)
-    {
+        if (!m_oEntityMap.get(toConnector).contains(toDataObjectClass))
+        {
+            m_oEntityMap.get(toConnector).add(toDataObjectClass);
+            return true;
+        }
         return false;
     }
 
+    /**
+     * Gets all of the objects of type K from the data source
+     * @param toClass the class to get the objects from
+     * @param <K> the type of Data Object to retrieve
+     * @return a cursor with the data objects, if no data objects were found, the cursor will be empty
+     */
+    public final <K extends DataObject> DataCursor<K> get(Class<K> toClass)
+    {
+        return null;
+    }
 
 
-    @Override
-    public abstract boolean isDataStoreCreated();
+/*
 
-    @Override
-    public abstract boolean createDataStore();
 
-    @Override
-    public abstract boolean deleteDataStore();
 
 
 
@@ -272,14 +225,6 @@ public abstract class DataManager
 
 
 
-
-    /**
-     * Saves the Data Object to the data store through the data manager
-     * @param toClass the class to save
-     * @param toValues the property value pairs of the values to save
-     * @param <K> the type of DataObject
-     * @return true if the record was stored successfully
-     */
     private <K extends DataObject> boolean save(Class<K> toClass, Map<String, Object> toValues)
     {
         if (hasDataManager())
@@ -302,14 +247,10 @@ public abstract class DataManager
         return false;
     }
 
-    /**
-     * Stores the data object to the data store
-     * @param toObject The data object to store
-     * @return true if the object was added successfully
-     */
     public boolean add(DataObject toObject)
     {
         Utilities.checkParameterNotNull("toObject", toObject);
         return save(toObject.getClass(), Java.getValues(toObject));
     }
+    */
 }
