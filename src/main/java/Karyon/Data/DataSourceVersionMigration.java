@@ -16,12 +16,14 @@ public class DataSourceVersionMigration
     @Override
     public boolean upgrade() throws DataMigrationFailedException
     {
-        return DataManager.getInstance().addEntity(DataSourceVersion.class);
+        //return DataManager.getInstance().addEntity(DataSourceVersion.class);
+        return false;
     }
 
     @Override
     public boolean revert() throws DataMigrationFailedException
     {
-        return DataManager.getInstance().removeEntity(DataSourceVersion.class);
+        //return DataManager.getInstance().removeEntity(DataSourceVersion.class);
+        return false;
     }
 }

@@ -4,45 +4,66 @@
 
     <groupId>uk.co.icatalyst</groupId>
     <artifactId>karyon.data</artifactId>
-    <packaging>jar</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.2-SNAPSHOT</version>
     <name>Karyon.Data</name>
     <description>Karyon Data Libraries</description>
+    <packaging>jar</packaging>
+
+    <properties>
+        <!-- github server corresponss to entry in ~/.m2/settings.xml -->
+        <github.global.server>github</github.global.server>
+
+        <!-- Build related properties -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- Plugin related properties -->
+        <uk.co.icatalyst.karyon.version>0.2-SNAPSHOT</uk.co.icatalyst.karyon.version>
+        <junit.version>4.11</junit.version>
+        <org.apache.maven.plugins.maven.compiler.plugin.version>3.0</org.apache.maven.plugins.maven.compiler.plugin.version>
+        <org.apache.maven.plugins.maven.deploy.plugin.version>2.7</org.apache.maven.plugins.maven.deploy.plugin.version>
+        <com.github.github.site.maven.plugin.version>0.8</com.github.github.site.maven.plugin.version>
+    </properties>
 
     <dependencies>
+        <!-- Core library -->
         <dependency>
             <groupId>uk.co.icatalyst</groupId>
             <artifactId>karyon</artifactId>
-            <version>1.1</version>
+            <version>${uk.co.icatalyst.karyon.version}</version>
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
-            <groupId>org.codehaus.jackson</groupId>
-            <artifactId>jackson-mapper-asl</artifactId>
-            <version>1.9.4</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.2.2</version>
-        </dependency>
-
+        <!-- Testing -->
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.11</version>
+            <version>${junit.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.derby</groupId>
+            <artifactId>derby</artifactId>
+            <version>10.9.1.0</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
+    <!-- ICatalyst repository -->
     <repositories>
+        <repository>
+            <id>Karyon-mvn-repo</id>
+            <url>https://raw.github.com/kmchugh/Karyon/mvn-repo</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+
         <repository>
             <id>Karyon.Data-mvn-repo</id>
             <url>https://raw.github.com/kmchugh/Karyon.Data/mvn-repo</url>
             <snapshots>
                 <enabled>true</enabled>
-                <updatePolicy>always</updatePolicy>
             </snapshots>
         </repository>
     </repositories>
@@ -56,8 +77,19 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>${org.apache.maven.plugins.maven.compiler.plugin.version}</version>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                    <source>${java.specification.version}</source>
+                    <target>${java.specification.version}</target>
+                </configuration>
+            </plugin>
+
+            <plugin>
                 <artifactId>maven-deploy-plugin</artifactId>
-                <version>2.7</version>
+                <version>${org.apache.maven.plugins.maven.deploy.plugin.version}</version>
                 <configuration>
                     <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
                 </configuration>
@@ -66,7 +98,7 @@
             <plugin>
                 <groupId>com.github.github</groupId>
                 <artifactId>site-maven-plugin</artifactId>
-                <version>0.8</version>
+                <version>${com.github.github.site.maven.plugin.version}</version>
                 <configuration>
                     <message>Maven artifacts for ${project.version}</message>
                     <noJekyll>true</noJekyll>
@@ -90,11 +122,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <properties>
-        <!-- github server corresponss to entry in ~/.m2/settings.xml -->
-        <github.global.server>github</github.global.server>
-    </properties>
 
     <distributionManagement>
         <repository>
