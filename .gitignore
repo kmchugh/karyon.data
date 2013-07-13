@@ -16,4 +16,5 @@ config/
 .idea/
 *.iml
 *.iws
+derby.log
 pom.xml.releaseBackup
