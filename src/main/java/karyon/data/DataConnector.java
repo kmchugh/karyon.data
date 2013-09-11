@@ -1,4 +1,4 @@
-package karyon1.data1;
+package karyon.data;
 
 /**
  * A data connector is an adapter to manipulate data in a specific type

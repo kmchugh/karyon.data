@@ -1,6 +1,6 @@
-package karyon1.data1;
+package karyon.data;
 
-import karyon1.exceptions1.DataMigrationFailedException;
+import karyon.exceptions.DataMigrationFailedException;
 
 /**
  * A Data Migration allows upgrading or downgrading of a database

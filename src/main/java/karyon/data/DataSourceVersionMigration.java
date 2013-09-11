@@ -1,6 +1,6 @@
-package karyon1.data1;
+package karyon.data;
 
-import karyon1.exceptions1.DataMigrationFailedException;
+import karyon.exceptions.DataMigrationFailedException;
 
 /**
  * Creates the storage for tracking the Data Source Version

@@ -1,4 +1,4 @@
-package karyon1.data1;
+package karyon.data;
 
 import karyon.collections.HashMap;
 import karyon.collections.List;

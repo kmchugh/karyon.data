@@ -1,6 +1,6 @@
-package karyon1.exceptions1;
+package karyon.exceptions;
 
-import karyon1.data1.DataMigration;
+import karyon.data.DataMigration;
 
 /**
  * Data Migration Exceptions occur when a data store could not be upgraded or downgraded

@@ -1,4 +1,4 @@
-package karyon1.data1;
+package karyon.data;
 
 import karyon.applications.Application;
 import karyon.ISessionManager;
