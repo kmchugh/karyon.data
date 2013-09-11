@@ -5,7 +5,7 @@
     <groupId>uk.co.icatalyst</groupId>
     <artifactId>karyon.data</artifactId>
     <version>0.2-SNAPSHOT</version>
-    <name>Karyon.Data</name>
+    <name>karyon.data</name>
     <description>Karyon Data Libraries</description>
     <packaging>jar</packaging>
 
@@ -17,7 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Plugin related properties -->
-        <uk.co.icatalyst.karyon.version>0.2-SNAPSHOT</uk.co.icatalyst.karyon.version>
+        <uk.co.icatalyst.karyon.version>0.3-SNAPSHOT</uk.co.icatalyst.karyon.version>
         <junit.version>4.11</junit.version>
         <org.apache.maven.plugins.maven.compiler.plugin.version>3.0</org.apache.maven.plugins.maven.compiler.plugin.version>
         <org.apache.maven.plugins.maven.deploy.plugin.version>2.7</org.apache.maven.plugins.maven.deploy.plugin.version>
@@ -52,8 +52,8 @@
     <!-- ICatalyst repository -->
     <repositories>
         <repository>
-            <id>Karyon-mvn-repo</id>
-            <url>https://raw.github.com/kmchugh/Karyon/mvn-repo</url>
+            <id>karyon-mvn-repo</id>
+            <url>https://raw.github.com/kmchugh/karyon/mvn-repo</url>
             <snapshots>
                 <enabled>true</enabled>
                 <updatePolicy>always</updatePolicy>
@@ -61,8 +61,8 @@
         </repository>
 
         <repository>
-            <id>Karyon.Data-mvn-repo</id>
-            <url>https://raw.github.com/kmchugh/Karyon.Data/mvn-repo</url>
+            <id>karyon.data-mvn-repo</id>
+            <url>https://raw.github.com/kmchugh/karyon.data/mvn-repo</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -70,9 +70,9 @@
     </repositories>
 
     <scm>
-        <connection>scm:git:git@github.com:kmchugh/Karyon.Data.git</connection>
-        <url>scm:git:git@github.com:kmchugh/Karyon.Data.git</url>
-        <developerConnection>scm:git:git@github.com:kmchugh/Karyon.Data.git</developerConnection>
+        <connection>scm:git:git@github.com:kmchugh/karyon.data.git</connection>
+        <url>scm:git:git@github.com:kmchugh/karyon.data.git</url>
+        <developerConnection>scm:git:git@github.com:kmchugh/karyon.data.git</developerConnection>
     </scm>
 
     <build>
@@ -108,7 +108,7 @@
                     <includes>
                         <include>**/*</include>
                     </includes>
-                    <repositoryName>Karyon.Data</repositoryName>
+                    <repositoryName>karyon.data</repositoryName>
                     <repositoryOwner>kmchugh</repositoryOwner>
                     <merge>true</merge>
                 </configuration>

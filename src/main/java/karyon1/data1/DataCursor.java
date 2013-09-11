@@ -1,6 +1,6 @@
-package Karyon.Data;
+package karyon1.data1;
 
-import Karyon.SingletonManager;
+import karyon.SingletonManager;
 
 /**
  * A DataCursor represents the results of a query to the data source.  The cursor can
@@ -9,7 +9,7 @@ import Karyon.SingletonManager;
  * @param <T> the type of DataObject in this data cursor
  */
 public class DataCursor<T extends DataObject>
-    extends Karyon.Object
+    extends karyon.Object
 {
     private T m_oDataFlyweight;
     private long m_nPointer;

@@ -1,8 +1,8 @@
-package Karyon.Data;
+package karyon1.data1;
 
-import Karyon.Applications.Application;
-import Karyon.ISessionManager;
-import Karyon.Version;
+import karyon.applications.Application;
+import karyon.ISessionManager;
+import karyon.Version;
 
 /**
  * Created with IntelliJ IDEA.

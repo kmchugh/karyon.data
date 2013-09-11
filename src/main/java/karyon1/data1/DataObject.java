@@ -1,9 +1,7 @@
-package Karyon.Data;
+package karyon1.data1;
 
-import Karyon.*;
-import Karyon.DynamicCode.Java;
-import Karyon.Exceptions.PropertyNotSetException;
-import sun.reflect.generics.tree.FieldTypeSignature;
+import karyon.dynamicCode.Java;
+import karyon.exceptions.PropertyNotSetException;
 
 import java.util.Map;
 
@@ -13,7 +11,7 @@ import java.util.Map;
  * such as JSON, binary, or sql statements
  */
 public abstract class DataObject
-    extends Karyon.Object
+    extends karyon.Object
 {
     /**
      * Creates a data object from the data provided in the map specified

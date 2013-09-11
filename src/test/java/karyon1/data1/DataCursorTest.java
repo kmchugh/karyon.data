@@ -1,6 +1,6 @@
-package Karyon.Data;
+package karyon1.data1;
 
-import Karyon.Testing.KaryonTest;
+import karyon.testing.KaryonTest;
 import org.junit.Test;
 import static org.junit.Assert.*;
 

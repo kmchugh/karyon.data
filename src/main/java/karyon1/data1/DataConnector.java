@@ -1,13 +1,11 @@
-package Karyon.Data;
-
-import Karyon.Utilities;
+package karyon1.data1;
 
 /**
  * A data connector is an adapter to manipulate data in a specific type
  * of data store.  All data connectors should extend from this class
  */
 public abstract class DataConnector
-    extends Karyon.Object
+    extends karyon.Object
     implements IDataConnector
 {
     @Override
