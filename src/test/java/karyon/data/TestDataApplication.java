@@ -25,12 +25,6 @@ public class TestDataApplication
     }
 
     @Override
-    public ISessionManager createSessionManager()
-    {
-        return null;
-    }
-
-    @Override
     protected boolean onInit()
     {
         // Set up some data connections
