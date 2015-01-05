@@ -1,0 +1,454 @@
+/**
+ * Gradle build file.  This contains all of the configuration
+ * for correctly building the enclosed project.
+ *
+ *
+ * Build numbers are represented as major.minor.patch
+ *
+ * Creating a release can be completed from gradle.  There are three types of
+ * releases; snapshot, patch, minor.  These are described below:
+ *
+ * - Snapshot build, a snapshot is a build that is currently under development.
+ * A snapshot build would cause a full clean, build and test to be executed.
+ * For a snapshot the following steps would be completed
+ * - Fetch and merge the latest code from the master branch in the remote repo
+ * - clean, build, and test the latest code
+ * - if the tests complete successfully:
+ *     - commit the code back to the master branch with a snapshot comment
+ *     - create and deploy a maven snapshot which will have the -snapshot flag
+ * appended
+ *
+ * - Patch build, a patch build is a build where there are minor fixes being
+ * released.  A patch will go through the following process:
+ * - Fetch and merge the latest code from the master branch in the remote repo
+ * - clean, build, and test the latest code
+ * - if the tests complete successfully
+ *     - increment the version patch number and tag the code
+ *     - commit the code back to the master branch
+ *     - create and deploy a maven snapshot
+ *
+ * - Minor build, a major build usually is a major version upgrade, new features
+ * and functionality.  A major build would go through the following process:
+ * - Fetch and merge the latest code from the master branch in the remote repo
+ * - clean, build, and test the latest code
+ * - if the tests complete successfully
+ *     - increment the version major number and tag the code
+ *     - commit the code back to the master branch
+ *     - create and deploy a maven snapshot
+ *
+ *
+ * Releases can only be created from the master branch.
+ *
+ *
+ * Usage:
+ *     To build a feature snapshot:
+ *         gradle snapshot
+ *     To build a patch version:
+ *         gradle patch
+ *     To build a minor version:
+ *         gradle minor
+ *
+ */
+
+// Imports for any code used within the build
+import java.util.regex.Pattern
+
+// Apply required plugins
+apply plugin: 'java'                            // required for java build
+apply plugin: 'maven'                           // required for maven interaction
+apply plugin: 'jacoco'                          // required for code coverage reports for testing
+apply plugin: 'com.github.kt3k.coveralls'       // required for code coverage and travis
+
+// Maven build variables
+
+// Default local directory to deploy the maven repository to
+def deploymentDir = System.getProperty('user.home') + '/.build/maven/' + project.name
+
+// Setup the default tasks
+defaultTasks 'snapshot'
+
+// Required for coveralls code coverage support
+// see https://github.com/kt3k/coveralls-gradle-plugin
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath "org.kt3k.gradle.plugin:coveralls-gradle-plugin:${coveralls_version}"
+    }
+}
+
+// Set up of project dependencies
+dependencies {
+
+    compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider:${jackson_version}"
+    compile "uk.co.icatalyst:karyon:${karyon_version}"
+
+    testCompile "org.apache.derby:derby:${apache_derby_version}"
+    testCompile "junit:junit:${junit_version}"
+}
+
+// Configuration of unit tests
+test {
+    maxParallelForks = new Integer(maxForks)
+    forkEvery = new Integer(maxTestsPerFork)
+
+    beforeTest {
+        descriptor -> logger.lifecycle("Executing: " + descriptor)
+    }
+}
+test.enabled = new Boolean(testEnabled)
+
+// Ensure the properties are correctly set of each of the build types
+gradle.taskGraph.whenReady {taskGraph ->
+    if (taskGraph.hasTask(minor)){
+        // Update the properties for a release build
+        // A release build should be pushed to the master branch and tagged
+        buildTag = true
+        incrementPatch = false
+        incrementMinor = true
+        isSnapshotVersion = false
+    }
+    else if (taskGraph.hasTask(patch)){
+        // Update the properties for a release build
+        // A tag should be created for a staging build
+        buildTag = true
+        incrementPatch = true
+        incrementMinor = false
+        isSnapshotVersion = false
+    }
+    else{
+        // No changes are required from the defaults for a snapshot build
+        buildTag = false
+        incrementPatch = false
+        incrementMinor = false
+        isSnapshotVersion = true
+    }
+    version = majorVersion + '.' + minorVersion + '.' + patchVersion + (isSnapshotVersion ? '-SNAPSHOT' : '')
+}
+
+// Set up of repositories
+repositories {
+    maven { url "http://repo.maven.apache.org/maven2" }
+    maven { url mavenRepository }
+    maven { url 'http://kt3k.github.io/repository/maven/release'}
+    maven { url "https://raw.github.com/kmchugh/karyon/mvn-repo"}
+}
+
+
+// Configuration of the maven uploader
+uploadArchives{
+    repositories.mavenDeployer {
+        repository(url: 'file://' + deploymentDir)
+    }
+}
+
+task printProperties() << {
+
+    description "Displays the current properties for this execution"
+
+    println "****************************************"
+    println "  Deployment information ( v" + version + " )"
+    println "****************************************"
+    println "  Branch: \t\t\t${buildBranch}"
+    println "  Release Branch: \t\t${releaseBranch}"
+    println "  Tag: \t\t\t\t${buildTag}"
+    println "  Git Repository: \t\t${gitRepository}"
+    println "  Deployment Directory: \t${deploymentDir}"
+    println "  Maven Branch: \t\t${mavenBranch}"
+    println "  Maven Repository: \t\t${mavenRepository}"
+    println "  Incrementing Build: \t\t${(incrementPatch || incrementMinor)}"
+    println "****************************************"
+}
+
+/**
+ * Determines if the branch we are on is the release branch.
+ * The release branch is set from gradle.properties
+ */
+def isReleaseBranch()
+{
+    return "git rev-parse --abbrev-ref HEAD".execute().text.trim().equals(releaseBranch)
+}
+
+// This is the jacoco task for generating the reports
+jacocoTestReport {
+    description "Creates the code coverage test reports"
+    reports {
+        xml.enabled true
+        html.enabled true
+    }
+}
+
+
+
+
+
+task snapshot(dependsOn: 'increment'){
+    description "creates a development build, no auto increment of build and no tags"
+}
+
+task patch(dependsOn: 'increment'){
+    description "creates a staging build, auto increments build and tags version"
+}
+
+task minor(dependsOn: 'increment'){
+    description "creates a release build, auto increments minor and tags version"
+}
+
+// Custom task for incrementing the build number
+task increment(dependsOn: 'updateMaven') {
+    onlyIf {incrementPatch || incrementMinor}
+
+    doLast {
+        def propertyFile = file("gradle.properties")
+        def text = propertyFile.getText()
+        def patchMatcher = Pattern.compile("patchVersion=(\\d+)").matcher(text)
+        def minorMatcher = Pattern.compile("minorVersion=(\\d+)").matcher(text)
+        patchMatcher.find()
+        minorMatcher.find()
+
+        def patchVersion = incrementPatch ? (Integer.parseInt(patchMatcher.group(1)) + 1) : 0
+        def minorVersion = incrementMinor ? Integer.parseInt(minorMatcher.group(1)) + 1 : minorVersion
+
+        text = patchMatcher.replaceAll("patchVersion=" + patchVersion)
+        if (incrementMinor)
+        {
+            minorMatcher = Pattern.compile("minorVersion=(\\d+)").matcher(text)
+            text = minorMatcher.replaceAll("minorVersion=" + minorVersion)
+        }
+
+        propertyFile.write(text)
+
+        // Update the version with the new version number
+        project.version = majorVersion + '.' + minorVersion + '.' + patchVersion + (isSnapshotVersion ? '-SNAPSHOT' : '')
+
+        // add the changes
+        def command = "git add -A ."
+        println ":adding version changes in " + releaseBranch
+        println ":  using command " + command
+
+        def proc = command.execute()
+
+        proc.waitFor()
+        if (proc.exitValue() != 0)
+        {
+            println "stderr: ${proc.err.text}"
+            println "stdout: ${proc.in.text}"
+            throw new GradleException("failed with return code " + proc.exitValue())
+        }
+
+        def message = "${project.version}"
+        // recommit
+        command = "git commit --message=${message}"
+
+        proc = command.execute()
+
+        println ":committing version changes in " + releaseBranch
+        println ":  using command " + command
+        proc.waitFor()
+        def exitValue = proc.exitValue();
+        if (proc.exitValue() != 0 && proc.exitValue() != 1)
+        {
+            println "stderr: ${exitValue}"
+            println "stderr: ${proc.err.text}"
+            println "stdout: ${proc.in.text}"
+            throw new GradleException("failed with return code " + proc.exitValue())
+        }
+
+        // Push the commit
+        command = ["git", "push", "origin", "${releaseBranch}"]
+
+        proc = command.execute()
+
+        println ":pushing version changes in " + releaseBranch
+        println ":  using command " + command
+        proc.waitFor()
+        if (proc.exitValue() != 0)
+        {
+            println "stderr: ${proc.err.text}"
+            println "stdout: ${proc.in.text}"
+            throw new GradleException("failed with return code " + proc.exitValue())
+        }
+    }
+}
+
+
+task updateMaven(dependsOn: ['clean', 'releaseCommit', 'pushMavenRepo'])
+
+// Task that actually completes the release build
+task releaseBuild(dependsOn: ['test', 'build', 'fetchReleaseRepo', 'tagBuild']){
+}
+
+// Commits the code back to git in the release branch
+task releaseCommit(dependsOn: 'releaseBuild') << {
+    def command = buildTag ?
+        ["git", "push", "origin", "${releaseBranch}", "--tags"] :
+        ["git", "push", "origin", "${releaseBranch}"]
+
+    println ":pushing files in " + releaseBranch
+    println ":  using command " + command
+
+    def proc = command.execute()
+
+    proc.waitFor()
+    if (proc.exitValue() != 0)
+    {
+        println "stderr: ${proc.err.text}"
+        println "stdout: ${proc.in.text}"
+        throw new GradleException("failed with return code " + proc.exitValue())
+    }
+}
+
+// Ensures the latest code has been fetched and merged from the release repo
+task fetchReleaseRepo(dependsOn : ['clean', 'printProperties']) << {
+    if (isReleaseBranch())
+    {
+        def command = ["git", "pull", "origin", "${releaseBranch}", "--recurse-submodules"];
+
+        println ":pulling from ${releaseBranch}"
+        println ":  using command " + command
+
+        def proc = command.execute()
+
+        proc.waitFor()
+        if (proc.exitValue() != 0)
+        {
+            println "stderr: ${proc.err.text}"
+            println "stdout: ${proc.in.text}"
+            throw new GradleException("failed with return code " + proc.exitValue())
+        }
+    }
+    else
+    {
+        throw new GradleException("Not on the release branch, switch to '${releaseBranch}' to create a release");
+    }
+}
+tasks.test.shouldRunAfter tasks.fetchReleaseRepo
+
+// tags the build if required
+task tagBuild {
+    onlyIf {buildTag}
+
+    doLast{
+        // Note, this works over the current dir as it is tagging this build
+        def command = ["git", "tag", "v${project.version}"]
+
+        println ":tagging files for commit in " + deploymentDir
+        println ":  using command " + command
+
+        def proc = command.execute()
+
+        proc.waitFor()
+        if (proc.exitValue() != 0)
+        {
+            println "stderr: ${proc.err.text}"
+            println "stdout: ${proc.in.text}"
+            throw new GradleException("failed with return code " + proc.exitValue())
+        }
+    }
+}
+
+
+/*********************
+* MAVEN SPECIFIC TASKS
+**********************/
+
+// Clones or fetches the maven repository
+task cloneMavenRepo{
+    def repositoryDir = new File(deploymentDir).getParentFile()
+    def createdDir = false
+
+    doFirst {
+        if (!new File(deploymentDir).exists())
+        {
+            repositoryDir.mkdirs()
+            createdDir = true;
+        }
+    }
+
+    doLast {
+        def command = createdDir ?
+            "git -C " + repositoryDir + " clone -b " + mavenBranch + " " + mavenRepository :
+            "git -C " + deploymentDir + " fetch origin"
+
+        println ":" + (createdDir ? "cloning" : "fetching") + " repo to " + deploymentDir
+        println ":  using command " + command
+
+        def proc = command.execute()
+
+        proc.waitFor()
+        if (proc.exitValue() != 0)
+        {
+            println "stderr: ${proc.err.text}"
+            println "stdout: ${proc.in.text}"
+            throw new GradleException("failed with return code " + proc.exitValue())
+        }
+    }
+}
+tasks.uploadArchives.shouldRunAfter tasks.cloneMavenRepo
+tasks.cloneMavenRepo.shouldRunAfter tasks.releaseCommit
+
+// Executes a git add on the maven repo directory
+task updateMavenRepo(dependsOn: ['cloneMavenRepo', 'uploadArchives']) << {
+    def command = "git -C " + deploymentDir + " add -A ."
+
+    println ":staging files for commit in " + deploymentDir
+    println ":  using command " + command
+
+    def proc = command.execute()
+
+    proc.waitFor()
+    if (proc.exitValue() != 0)
+    {
+        println "stderr: ${proc.err.text}"
+        println "stdout: ${proc.in.text}"
+        throw new GradleException("failed with return code " + proc.exitValue())
+    }
+}
+
+// Commits any updates to the maven repository
+task commitMavenRepo(dependsOn: ['updateMavenRepo']) << {
+    def message = "${project.version}"
+    def command = "git -C ${deploymentDir} commit --message=${message}"
+
+    println ":committing files in " + deploymentDir
+    println ":  using command " + command
+
+    def proc = command.execute()
+    proc.waitFor()
+
+    if (proc.exitValue() != 0)
+    {
+        println "stderr: ${proc.err.text}"
+        println "stdout: ${proc.in.text}"
+        throw new GradleException("failed with return code " + proc.exitValue())
+    }
+}
+
+
+
+// pushes the deployment dir to the maven repo
+task pushMavenRepo(dependsOn : 'commitMavenRepo') << {
+    def command = buildTag ? 
+        ["git", "-C", deploymentDir, "push", "origin", "${mavenBranch}", "--tags"] :
+        ["git", "-C", deploymentDir, "push", "origin", "${mavenBranch}"]
+
+    println ":pushing files in " + deploymentDir
+    println ":  using command " + command
+
+    def proc = command.execute()
+
+    proc.waitFor()
+    if (proc.exitValue() != 0)
+    {
+        println "stderr: ${proc.err.text}"
+        println "stdout: ${proc.in.text}"
+        throw new GradleException("failed with return code " + proc.exitValue())
+    }
+}
+
+/*************************
+* END MAVEN SPECIFIC TASKS
+**************************/
+

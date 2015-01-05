@@ -7,7 +7,14 @@ jdk:
 branches:
     only:
         - master
+        - dev
 
 notifications:
     email:
         - kmchugh@icatalyst.co.uk
+
+env:
+    - TERM=dumb
+
+after_success:
+    - gradle jacocoTestReport coveralls
