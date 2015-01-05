@@ -4,9 +4,9 @@
   <artifactId>karyon.data</artifactId>
   <versioning>
     <versions>
-      <version>0.2-SNAPSHOT</version>
       <version>0.3.0</version>
+      <version>0.4.0</version>
     </versions>
-    <lastUpdated>20150105115234</lastUpdated>
+    <lastUpdated>20150105120431</lastUpdated>
   </versioning>
 </metadata>
