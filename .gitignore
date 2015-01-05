@@ -17,3 +17,4 @@ config/
 *.iws
 derby.log
 pom.xml.releaseBackup
+.gradle/
