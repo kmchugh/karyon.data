@@ -1,9 +1,9 @@
-package Karyon.Data;
+package karyon.data;
 
-import Karyon.Applications.Application;
-import Karyon.Date;
-import Karyon.Testing.KaryonTest;
-import Karyon.Version;
+import karyon.applications.Application;
+import karyon.Date;
+import karyon.testing.KaryonTest;
+import karyon.Version;
 import org.junit.*;
 
 import static org.junit.Assert.*;

@@ -1,6 +1,6 @@
-package Karyon.Data;
+package karyon.data;
 
-import Karyon.Applications.Application;
+import karyon.applications.Application;
 
 import java.sql.Driver;
 

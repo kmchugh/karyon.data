@@ -1,8 +1,8 @@
-package Karyon.Data;
+package karyon.data;
 
-import Karyon.Applications.Application;
-import Karyon.ISessionManager;
-import Karyon.Version;
+import karyon.applications.Application;
+import karyon.ISessionManager;
+import karyon.Version;
 
 /**
  * Created with IntelliJ IDEA.
@@ -22,12 +22,6 @@ public class TestDataApplication
     public TestDataApplication(Version toVersion)
     {
         super(toVersion);
-    }
-
-    @Override
-    public ISessionManager createSessionManager()
-    {
-        return null;
     }
 
     @Override

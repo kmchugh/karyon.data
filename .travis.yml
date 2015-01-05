@@ -2,12 +2,18 @@ language: java
 jdk:
     - openjdk7
     - oraclejdk7
-    - openjdk6
 
 branches:
     only:
         - master
+        - dev
 
 notifications:
     email:
         - kmchugh@icatalyst.co.uk
+
+env:
+    - TERM=dumb
+
+after_success:
+    - gradle jacocoTestReport coveralls

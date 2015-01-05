@@ -1,14 +1,14 @@
-package Karyon.Data;
+package karyon.data;
 
-import Karyon.Collections.HashMap;
-import Karyon.Collections.List;
-import Karyon.Utilities;
+import karyon.collections.HashMap;
+import karyon.collections.List;
+import karyon.Utilities;
 
 /**
  * The DataManager controls all access to data and data operations
  */
 public class DataManager
-    extends Karyon.Object
+    extends karyon.Object
 {
     private static DataManager g_oDataManager;
 

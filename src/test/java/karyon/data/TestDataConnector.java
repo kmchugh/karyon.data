@@ -1,4 +1,4 @@
-package Karyon.Data;
+package karyon.data;
 
 /**
  * Created with IntelliJ IDEA.

@@ -1,12 +1,12 @@
-package Karyon.Data;
+package karyon.data;
 
-import Karyon.Exceptions.DataMigrationFailedException;
+import karyon.exceptions.DataMigrationFailedException;
 
 /**
  * A Data Migration allows upgrading or downgrading of a database
  */
 public abstract class DataMigration
-    extends Karyon.Object
+    extends karyon.Object
 {
     private float m_nVersion;
 

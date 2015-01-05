@@ -1,6 +1,6 @@
-package Karyon.Data;
+package karyon.data;
 
-import Karyon.Date;
+import karyon.Date;
 
 /**
  * The DataSourceVersion holds information about migrations
