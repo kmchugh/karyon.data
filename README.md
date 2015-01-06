@@ -1,4 +1,4 @@
-karyon
+karyon.data
 =========
 [![Build Status](https://travis-ci.org/kmchugh/karyon.data.png)](https://travis-ci.org/kmchugh/karyon.data)
 [![Coverage Status](https://coveralls.io/repos/kmchugh/karyon.data/badge.png?branch=master)](https://coveralls.io/r/kmchugh/karyon.data?branch=master)
